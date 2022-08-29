@@ -1,15 +1,4 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -47,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ShopifyAdminApp = exports.getMethodName = void 0;
+exports.initializeApp = exports.getMethodName = void 0;
 var axios_1 = require("axios");
 function getMethodName() {
     return {
@@ -102,6 +91,9 @@ function executeAxiosMethod(method, url, data) {
             }
         });
     });
+}
+function clone(obj) {
+    return Object.create(Object.getPrototypeOf(obj), Object.getOwnPropertyDescriptors(obj));
 }
 String.prototype.pluralize = function (isCancelled, revert) {
     if (isCancelled)
@@ -205,35 +197,63 @@ String.prototype.pluralize = function (isCancelled, revert) {
     }
     return this;
 };
-function ShopifyAdminApp(_a) {
-    var shop = _a.shop, apiKey = _a.apiKey, apiVersion = _a.apiVersion, accessToken = _a.accessToken;
-    var appContext = this;
-    function getQuery(query) {
-        return query ? "?".concat(query) : "";
+var ShopifyAdminApp = /** @class */ (function () {
+    function ShopifyAdminApp(shop, apiKey, apiVersion, accessToken) {
+        this.appContext = this;
+        this.shop = "";
+        this.apiKey = "";
+        this.apiVersion = "";
+        this.accessToken = "";
+        this.baseUrl = "";
+        this.query = "";
+        this.collectionName = "";
+        this.collectionPath = "";
+        this.isPlural = false;
+        this.docUrl = "";
+        this.shop = shop;
+        this.apiKey = apiKey;
+        this.apiVersion = apiVersion;
+        this.accessToken = accessToken;
+        this.baseUrl = "https://".concat(this.apiKey, ":").concat(this.accessToken, "@").concat(this.shop, "/admin/api/").concat(this.apiVersion);
     }
-    this.baseUrl = "";
-    this.shop = shop;
-    this.apiKey = apiKey;
-    this.apiVersion = apiVersion;
-    this.accessToken = accessToken;
-    this.baseUrl = "https://".concat(this.apiKey, ":").concat(this.accessToken, "@").concat(this.shop, "/admin/api/").concat(this.apiVersion);
+    ShopifyAdminApp.prototype.getQuery = function (query) {
+        return query ? "?".concat(query) : "";
+    };
     /**
      *
      * @param {*} collectionPath a path to a collection
      * @param {*} isPlural Whether a collectionName is plural, skipping pluralizing if true
      * @returns
      */
-    this.collection = function (collectionPath, isPlural) {
+    ShopifyAdminApp.prototype.collection = function (collectionPath, isPlural) {
         if (isPlural === void 0) { isPlural = false; }
         if (!collectionPath)
             throw new Error("collectionPath is not valid or missing");
-        return __assign(__assign({}, appContext), { isPlural: isPlural, collectionPath: collectionPath, collectionName: collectionPath.indexOf("/") !== -1 ? collectionPath.slice().split("/").pop() : collectionPath });
+        return Object.assign(clone(this), {
+            isPlural: isPlural,
+            collectionPath: collectionPath,
+            collectionName: collectionPath.indexOf("/") !== -1 ? collectionPath.slice().split("/").pop() : collectionPath,
+        });
     };
-    this.doc = function (docId) {
-        var docUrl = "".concat(this.baseUrl, "/").concat(this.collectionPath.pluralize(this.isPlural), "/").concat(docId, ".json");
-        return __assign(__assign({}, this), { docId: docId, docUrl: docUrl });
+    ;
+    ShopifyAdminApp.prototype.doc = function (docId) {
+        var docUrl = "".concat(this.baseUrl, "/").concat(this.collectionPath.pluralize(this.isPlural, false), "/").concat(docId, ".json");
+        return Object.assign(clone(this), {
+            docId: docId,
+            docUrl: docUrl
+        });
     };
-    this.get = function () {
+    ;
+    ShopifyAdminApp.prototype.where = function (key, operator, value) {
+        if (!this.collectionName)
+            throw new Error("CollectionName is not valid");
+        if (!key || !operator || !value)
+            throw new Error("Query is not valid. key, operator and value are required");
+        var query = this.query ? "".concat(this.query, "&").concat(key, "=").concat(value) : "".concat(key, "=").concat(value);
+        return Object.assign(clone(this), { query: query });
+    };
+    ;
+    ShopifyAdminApp.prototype.get = function () {
         return __awaiter(this, void 0, void 0, function () {
             var query, url;
             return __generator(this, function (_a) {
@@ -245,42 +265,42 @@ function ShopifyAdminApp(_a) {
                         return [4 /*yield*/, axios_1.default.get(this.docUrl)];
                     case 1: return [2 /*return*/, _a.sent()];
                     case 2:
-                        query = getQuery(this.query);
-                        url = "".concat(this.baseUrl, "/").concat(this.collectionPath.pluralize(this.isPlural), ".json");
+                        query = this.getQuery(this.query);
+                        url = "".concat(this.baseUrl, "/").concat(this.collectionPath.pluralize(this.isPlural, false), ".json");
                         return [4 /*yield*/, axios_1.default.get("".concat(url).concat(query))];
                     case 3: return [2 /*return*/, _a.sent()];
                 }
             });
         });
     };
-    this.where = function (key, operator, value) {
-        if (!key || !operator || !value)
-            throw new Error("Query is not valid. key, operator and value are required");
-        var query = this.query ? "".concat(this.query, "&").concat(key, "=").concat(value) : "".concat(key, "=").concat(value);
-        return __assign(__assign({}, this), { query: query });
-    };
-    this.add = function (data) {
+    ;
+    ShopifyAdminApp.prototype.add = function (data) {
         return __awaiter(this, void 0, void 0, function () {
             var url;
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        if (!data)
+                            throw new Error("data is not valid");
                         if (!this.collectionName)
                             throw new Error("CollectionName is not valid or missing");
-                        url = "".concat(this.baseUrl, "/").concat(this.collectionPath.pluralize(this.isPlural), ".json");
+                        url = "".concat(this.baseUrl, "/").concat(this.collectionPath.pluralize(this.isPlural, false), ".json");
                         return [4 /*yield*/, axios_1.default.post(url, (_a = {}, _a[this.collectionName] = data, _a))];
                     case 1: return [2 /*return*/, _b.sent()];
                 }
             });
         });
     };
-    this.update = function (data) {
+    ;
+    ShopifyAdminApp.prototype.update = function (data) {
         return __awaiter(this, void 0, void 0, function () {
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        if (!data)
+                            throw new Error("data is not valid");
                         if (!this.docUrl)
                             throw new Error("docUrl is missing");
                         return [4 /*yield*/, axios_1.default.put(this.docUrl, (_a = {}, _a[this.collectionName] = data, _a))];
@@ -289,7 +309,8 @@ function ShopifyAdminApp(_a) {
             });
         });
     };
-    this.delete = function () {
+    ;
+    ShopifyAdminApp.prototype.delete = function () {
         return __awaiter(this, void 0, void 0, function () {
             var query;
             return __generator(this, function (_a) {
@@ -297,25 +318,30 @@ function ShopifyAdminApp(_a) {
                     case 0:
                         if (!this.docUrl)
                             throw new Error("docUrl is missing");
-                        query = getQuery(this.query);
+                        query = this.getQuery(this.query);
                         return [4 /*yield*/, axios_1.default.delete("".concat(this.docUrl).concat(query))];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
     };
+    ;
     /**
      * Execute custom action
      * @param {*} name Name of the action, ex. search, batch...
      * @param {*} methodName GET, POST, PUT, DELETE
      */
-    this.execAction = function (methodName, actionName, data) {
+    ShopifyAdminApp.prototype.execAction = function (methodName, actionName, data) {
         return __awaiter(this, void 0, void 0, function () {
             var query;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        query = getQuery(this.query);
+                        if (!methodName)
+                            throw new Error("methodName is not valid");
+                        if (!actionName)
+                            throw new Error("actionName is not valid");
+                        query = this.getQuery(this.query);
                         if (!(!this.collectionName && !this.docUrl)) return [3 /*break*/, 2];
                         return [4 /*yield*/, executeAxiosMethod(methodName, "".concat(this.baseUrl, "/").concat(actionName, ".json").concat(query), data)];
                     case 1: return [2 /*return*/, _a.sent()];
@@ -329,18 +355,25 @@ function ShopifyAdminApp(_a) {
             });
         });
     };
+    ;
     /**
      * Count items of a collection
      */
-    this.count = function () {
+    ShopifyAdminApp.prototype.count = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.execAction(getMethodName().GET, "count")];
+                    case 0: return [4 /*yield*/, this.execAction(getMethodName().GET, "count", null)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
     };
+    ;
+    return ShopifyAdminApp;
+}());
+function initializeApp(_a) {
+    var shop = _a.shop, apiKey = _a.apiKey, apiVersion = _a.apiVersion, accessToken = _a.accessToken;
+    return new ShopifyAdminApp(shop, apiKey, apiVersion, accessToken);
 }
-exports.ShopifyAdminApp = ShopifyAdminApp;
+exports.initializeApp = initializeApp;

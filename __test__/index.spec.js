@@ -1,10 +1,10 @@
 const { default: axios } = require("axios");
-const { ShopifyAdminApp, getMethodName } = require("../dist");
+const { initializeApp, getMethodName } = require("../dist");
 
 jest.mock("axios");
 
 describe("fetchUsers", () => {
-  let shopifyAdminApp = new ShopifyAdminApp({
+  let shopifyAdminApp = initializeApp({
     shop: "nike",
     apiKey: "123456789",
     apiVersion: "2021-10",
