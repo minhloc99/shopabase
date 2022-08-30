@@ -68,7 +68,7 @@ app.put("/customers/:id", async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    const { data } = await shopifyAdminApp.collection("customer").doc(id).update(customerData);
+    const { data } = await shopifyAdminApp.collection("customer").doc(id).update(req.body);
     res.status(200).send(data);
   } catch (error) {
     res.status(404).send("Item does not exist!");
