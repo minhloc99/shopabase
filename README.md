@@ -5,6 +5,19 @@ Installation:
 
 **npm install shopabase** or **yarn add shopabase**  
  
+**Migrate from axios or fetch to shopabase**
+
+```javascript
+axios.post(`https://${apiKey}:${accessToken}@${shop}/admin/api/${apiVersion}/products.json`,{
+	"product":{
+	   "title":"product1"
+	}
+})
+
+
+// => with shopabase syntax
+shopifyAdminApp.collection("product").add({"title":"product1"});
+```
 
 ---
 
