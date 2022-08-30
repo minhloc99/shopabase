@@ -3,8 +3,11 @@
 Shopabase is a wrapper of Shopify admin RESTapi. It is heavily inspired by **firebase/firestore** which allows the apis to be written in queries.  
 Installation:
 
-**npm install shopabase** or **yarn add shopabase**  
+```npm install shopabase```
+ or
+```yarn add shopabase``` 
  
+
 **Migrate from axios or fetch to shopabase**
 
 ```javascript
