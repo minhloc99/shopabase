@@ -1,6 +1,6 @@
 ## Introduction
 
-Shopabase is a wrapper of Shopify admin RESTapi. It is heavily inspired by firebase/firestore which allows the apis to be written in queries.  
+Shopabase is a wrapper of Shopify admin RESTapi. It is heavily inspired by **firebase/firestore** which allows the apis to be written in queries.  
 Installation:
 
 **npm install shopabase** or **yarn add shopabase**  
@@ -22,7 +22,87 @@ let shopifyAdminApp = initializeApp({
 });
 ```
 
-## Queries
+With NodeJs
+
+```plaintext
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const app = express();
+const { initializeApp } = require("shopabase");
+
+let shopifyAdminApp = initializeApp({
+  shop: process.env.SHOPIFY_STORE_NAME,
+  apiKey: process.env.SHOPIFY_ADMIN_API_KEY,
+  apiVersion: process.env.SHOPIFY_ADMIN_API_VERSION,
+  accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN
+});
+
+app.use(cors({ origin: true }));
+
+app.post("/customers/create", async (req, res, next) => {
+  try {
+    const { data } = await shopifyAdminApp.collection("customer").add(req.body);
+
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(404).send("Customer info is not valid");
+  }
+  return next();
+});
+
+app.get("/customers/:id", async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const { data } = await shopifyAdminApp.collection("customer").doc(id).get();
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(404).send("Item does not exist!");
+  }
+
+  return next();
+});
+
+app.put("/customers/:id", async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const { data } = await shopifyAdminApp.collection("customer").doc(id).update(customerData);
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(404).send("Item does not exist!");
+  }
+
+  return next();
+});
+
+app.get("/customers", async (_req, res, next) => {
+  const { data } = await shopifyAdminApp.collection("customer").get();
+
+  res.status(200).send(data);
+  return next();
+});
+
+app.delete("/customers/:id", async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const { data } = await shopifyAdminApp.collection("customer").doc(id).delete();
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(404).send("Item does not exist!");
+  }
+
+  return next();
+});
+
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`);
+});
+```
+
+Queries
 
 ```css
 
