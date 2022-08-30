@@ -27,7 +27,7 @@ shopifyAdminApp.collection("product").add({"title":"product1"});
 ##   
 Setup
 
-```css
+```javascript
 const { initializeApp } = require("shopabase");
 
 let shopifyAdminApp = initializeApp({
@@ -120,7 +120,7 @@ app.listen(port, () => {
 
 Queries
 
-```css
+```javascript
 
   // GET
   // Get by id
